@@ -1,4 +1,4 @@
-import React, { useState,useReducer,useContext } from "react";
+import React, { useReducer,useContext } from "react";
 import reducer from "./reducer";
 import axios from 'axios'
 
@@ -8,6 +8,13 @@ import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_SUCCESS,SETUP_
     UPDATE_USER_BEGIN,
     UPDATE_USER_SUCCESS,
     UPDATE_USER_ERROR,
+    HANDLE_CHANGE,
+    CLEAR_VALUES,
+    CREATE_JOB_BEGIN,
+    CREATE_JOB_ERROR,
+    CREATE_JOB_SUCCESS,
+    GET_JOBS_BEGIN,
+    GET_JOBS_SUCCESS,
 } from "./actions";
 
 const token = localStorage.getItem('token')
@@ -23,8 +30,20 @@ const initialState = {
     user: user ? JSON.parse(user) : null,
     token: token,
     userLocation: userLocation || '',
-    jobLocation: userLocation || '',
     showSidebar: false,
+    isEditing:false,
+    editJobId:'',
+    position:'',
+    company:'',
+    jobLocation: userLocation || '',
+    jobTypeOptions: ['full-time','part-time','remote','internship'],
+    jobType: 'full-time',
+    statusOptions:['interview','declined','pending'],
+    status: 'pending',
+    jobs:[],
+    totalJobs:0,
+    numOfPages:1,
+    page:1,
 }
 
 const AppContext = React.createContext()
@@ -40,7 +59,7 @@ const AppProvider = ({children}) => {
   //request
 
   authFetch.interceptors.request.use((config)=>{
-    //config.headers.commonn['Authorization'] = `Bearer ${state.token}`
+    config.headers.commonn['Authorization'] = `Bearer ${state.token}`
     return config
   },(error)=>{
     return Promise.reject(error)
@@ -51,9 +70,9 @@ const AppProvider = ({children}) => {
   authFetch.interceptors.response.use((response)=>{
     return response
   },(error)=>{
-    console.log(error.response);
+    // console.log(error.response);
     if(error.response.status === 401){
-        console.log('AUTH ERROR')
+        logoutUser()
     }
     return Promise.reject(error)
   })
@@ -117,13 +136,68 @@ const AppProvider = ({children}) => {
             dispatch({type:UPDATE_USER_SUCCESS,payload:{user,location,token}})
             addUserToLocalStorage({user,location,token})
         } catch (error) {
-            dispatch({type:UPDATE_USER_ERROR, payload:{msg:error.response.data.msg}})
+                if(error.response.status !==401 ){
+                    dispatch({type:UPDATE_USER_ERROR, 
+                    payload:{msg:error.response.data.msg},
+                })
+                }
         }
         clearAlert()
     }
+
+    const handleChange = ({ name, value }) => {
+        dispatch({ type: HANDLE_CHANGE, payload: { name, value }})
+    }
+    const clearValues = () => {
+        dispatch({ type: CLEAR_VALUES})
+    }
+
+    const createJob = async () => {
+        dispatch({type:CREATE_JOB_BEGIN})
+        try {
+            const {position, company, jobLocation, jobType, status } = state
+            await authFetch.post('/jobs', {
+                position, company, jobLocation, jobType, status, 
+            })
+            dispatch({type:CREATE_JOB_SUCCESS})
+            dispatch({type:CLEAR_VALUES})
+        } catch (error) {
+            if(error.response === 401)return
+            dispatch({
+                type: CREATE_JOB_ERROR,
+                payload: { msg: error.response.data.msg },
+            })
+        }
+        clearAlert()
+    }
+
+    const getJobs = async () => {
+        let url = `/jobs`
+
+        dispatch({type:GET_JOBS_BEGIN})
+        try {
+            const {data} = await authFetch(url);
+            const {jobs,totalJobs,numOfPages} = data
+            dispatch({
+                type:GET_JOBS_SUCCESS,
+                payload: {
+                    jobs,
+                    totalJobs,
+                    numOfPages,
+                },
+            }) 
+        } catch (error) {
+            console.log(error.response);
+        }
+        clearAlert()
+    }
+
+  
     return (
 
-     <AppContext.Provider value={{...state,displayAlert, setupUser, toggleSidebar, logoutUser, updateUser}}>
+     <AppContext.Provider value={{...state,displayAlert, setupUser, toggleSidebar, logoutUser, updateUser,
+     handleChange,clearValues,createJob,
+     }}>
         {children}
     </AppContext.Provider>
     )
