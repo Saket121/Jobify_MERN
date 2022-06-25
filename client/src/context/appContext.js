@@ -15,6 +15,7 @@ import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_SUCCESS,SETUP_
     CREATE_JOB_SUCCESS,
     GET_JOBS_BEGIN,
     GET_JOBS_SUCCESS,
+    SET_EDIT_JOB,
 } from "./actions";
 
 const token = localStorage.getItem('token')
@@ -192,11 +193,21 @@ const AppProvider = ({children}) => {
         clearAlert()
     }
 
-  
+    const setEditJob = (id) => {
+       dispatch({type:SET_EDIT_JOB, payload: {id} })
+    }
+
+    const editJob = () => {
+        console.log('edit job');
+    }
+
+    const deleteJob = (id) => {
+        console.log(`delet job : ${id}`);
+    }
     return (
 
      <AppContext.Provider value={{...state,displayAlert, setupUser, toggleSidebar, logoutUser, updateUser,
-     handleChange,clearValues,createJob,
+     handleChange,clearValues,createJob,getJobs,setEditJob,deleteJob,editJob,
      }}>
         {children}
     </AppContext.Provider>

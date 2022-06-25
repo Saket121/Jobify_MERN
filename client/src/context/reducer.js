@@ -1,4 +1,5 @@
 import { Action } from "history"
+import JobInfo from "../components/JobInfo"
 import { DISPLAY_ALERT, CLEAR_ALERT, 
     SETUP_USER_BEGIN,
     SETUP_USER_SUCCESS,
@@ -15,6 +16,7 @@ import { DISPLAY_ALERT, CLEAR_ALERT,
     CREATE_JOB_SUCCESS,
     GET_JOBS_BEGIN,
     GET_JOBS_SUCCESS,
+    SET_EDIT_JOB,
 } from "./actions"
 
 
@@ -135,6 +137,15 @@ if(action.type === GET_JOBS_SUCCESS){
         jobs:action.payload.jobs,
         totalJobs:action.payload.totalJobs,
         numOfPages: action.payload.numOfPages,
+    }
+}
+if(action.type === SET_EDIT_JOB ){
+    const job = state.jobs.find((job)=> job._id === action.payloaḍ.id)
+    const {_id, position, company, jobLocation, jobType, status} = job
+    return{
+        ...state, isEditing:true,
+        editJobId: _id,
+        position, company, jobLocation, jobType, status,
     }
 }
 throw new Error(`no such action : ${action.type}`)
