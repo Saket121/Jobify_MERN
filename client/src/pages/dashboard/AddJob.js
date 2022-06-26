@@ -3,7 +3,8 @@ import { useAppContext } from '../../context/appContext'
 import Wrapper from '../../assets/wrappers/DashboardFormPage'
 
 const AddJob = () => {
-    const { isLoading, isEditing, showAlert, displayAlert, position, company, jobLocation, jobType, jobTypeOptions,
+    const { isLoading, isEditing, showAlert, displayAlert, position, company, jobLocation, jobType, 
+        jobTypeOptions,
         status,
         statusOptions, handleChange, clearValues, createJob,editJob
     } = useAppContext()
